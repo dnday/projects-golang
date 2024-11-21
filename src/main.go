@@ -8,9 +8,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func BooksRoute(prefix string, r *mux.Router) {
+	b := r.PathPrefix(prefix).Subrouter()
+	b.HandleFunc("", api.ListBooksHandler).Methods("GET", "POST")
+	b.HandleFunc("/{id}", api.ListBooksHandler).Methods("PUT", "DELETE")
+	b.HandleFunc("/{id}", api.BookHandler).Methods("GET")
+}
 func main() {
 	h := mux.NewRouter()
-	api.BooksRoute("/api/books", h)
+
+	BooksRoute("/api/books", h)
 	log.Default()
 	h.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello from API!"))

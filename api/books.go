@@ -7,15 +7,7 @@ import (
 	"net/http"
 
 	"github.com/dnday/gdgoc-project/src/service"
-	"github.com/gorilla/mux"
 )
-
-func BooksRoute(prefix string, r *mux.Router) {
-	b := r.PathPrefix(prefix).Subrouter()
-	b.HandleFunc("", ListBooksHandler).Methods("GET", "POST")
-	b.HandleFunc("/{id}", ListBooksHandler).Methods("PUT", "DELETE")
-	b.HandleFunc("/{id}", BookHandler).Methods("GET")
-}
 
 func ListBooksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
