@@ -74,10 +74,14 @@ func ListBooksHandler(w http.ResponseWriter, r *http.Request) {
 func BookHandler(w http.ResponseWriter, r *http.Request) {
 	book, err := service.GetBookByID(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, "Book not found", http.StatusNotFound)
 		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(book)
+	if err := json.NewEncoder(w).Encode(book); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }

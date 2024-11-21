@@ -7,7 +7,8 @@ import (
 )
 
 type Book struct {
-	ID           primitive.ObjectID `bson:"_id"`
+	IDOBJ        primitive.ObjectID `bson:"_id,omitempty"`
+	ID           int                `bson:"id"`
 	Title        string             `bson:"title"`
 	Author       string             `bson:"author"`
 	Published_at string             `bson:"published_at"`
