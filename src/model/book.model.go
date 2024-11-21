@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Book is a struct that represents a book in the database.
 type Book struct {
 	IDOBJ        primitive.ObjectID `bson:"_id,omitempty"`
 	ID           int                `bson:"id"`

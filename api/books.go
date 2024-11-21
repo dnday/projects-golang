@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -15,47 +14,37 @@ func ListBooksHandler(w http.ResponseWriter, r *http.Request) {
 		data, err := service.GetAllBook()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(data)
-		return
 	case "POST":
-		// Close the request body when the function returns
-		defer r.Body.Close()
-
-		// Decode the JSON request body into a map
-		var book map[string]interface{}
-		if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Marshal the book map into JSON bytes
-		bookBytes, err := json.Marshal(book)
+		// Decode the JSON request body into a BookRequest
+		resp, err := service.AddBook(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		// Call the service to add the book
-		err = service.AddBook(bytes.NewReader(bookBytes))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Set the response header to JSON and return a success message
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(
-			map[string]interface{}{
-				"message": "Book created successfully",
-				"data":    book,
-			},
-		)
-		return
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Book added successfully",
+			"data":    resp,
+		})
 	case "PUT":
+		err := service.UpdateBook(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Content-Type", "application/json")
 
+	case "DELETE":
+		if err := service.DeleteBook(w, r); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Content-Type", "application/json")
 	default:
 		log.Default().Println(http.StatusMethodNotAllowed)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -64,16 +53,25 @@ func ListBooksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func BookHandler(w http.ResponseWriter, r *http.Request) {
-	book, err := service.GetBookByID(w, r)
-	if err != nil {
-		http.Error(w, "Book not found", http.StatusNotFound)
+	if r.Method != "GET" {
+		log.Default().Println(http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
-	}
+	} else {
+		book, err := service.GetBookByID(w, r)
+		if err != nil {
+			w.Header().Add("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"message": "Book not found",
+			})
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 
-	w.Header().Add("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(book); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		w.Header().Add("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(book); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
-
 }

@@ -14,20 +14,31 @@ func BooksRoute(prefix string, r *mux.Router) {
 	b.HandleFunc("/{id}", api.ListBooksHandler).Methods("PUT", "DELETE")
 	b.HandleFunc("/{id}", api.BookHandler).Methods("GET")
 }
+
+// main is the entry point of the program.
 func main() {
+	// Create a new Router.
 	h := mux.NewRouter()
 
+	// Add the BooksRoute to the router.
 	BooksRoute("/api/books", h)
-	log.Default()
+
+	// Add a route for the root url.
 	h.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+		// Just return a simple message.
 		w.Write([]byte("Hello from API!"))
 	})
+
+	// Create a new Server.
 	s := &http.Server{
-		Addr:    ":8000",
+		Addr:    ":8000", // Listen on port 8000.
 		Handler: h,
 	}
 
+	// Log a message when the server starts.
 	log.Default().Println("Server is running on port 8000")
-	log.Fatal(s.ListenAndServe())
 
+	// Start the server.
+	// This will block until the server is stopped.
+	log.Fatal(s.ListenAndServe())
 }
