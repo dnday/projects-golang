@@ -1,4 +1,4 @@
-# gdgoc
+# HTTP-SERVER AND DEPLOYMENT
 This is a simple RESTful API written in Go language for storing and retrieving book information.
 
 The program uses `gorilla/mux` as the router and `go.mongodb.org/mongo-driver` as the MongoDB driver.
