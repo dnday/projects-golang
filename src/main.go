@@ -8,10 +8,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// BooksRoute adds routes for the books API to the given router.
+//
+// The route prefix is "/api/books". The routes are:
+// - GET /api/books: List all books
+// - POST /api/books: Add a new book
+// - PUT /api/books/{id}: Update a book
+// - DELETE /api/books/{id}: Delete a book
+// - GET /api/books/{id}: Get a single book
 func BooksRoute(prefix string, r *mux.Router) {
 	b := r.PathPrefix(prefix).Subrouter()
+
+	// List all books
 	b.HandleFunc("", api.ListBooksHandler).Methods("GET", "POST")
+
+	// Update a book
 	b.HandleFunc("/{id}", api.ListBooksHandler).Methods("PUT", "DELETE")
+
+	// Get a single book
 	b.HandleFunc("/{id}", api.BookHandler).Methods("GET")
 }
 

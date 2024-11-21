@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Book represents a book entity with JSON and BSON tags for serialization.
 type Book struct {
 	ID           int       `json:"id" bson:"id"`
 	Title        string    `json:"title" bson:"title"`
@@ -26,16 +27,21 @@ type Book struct {
 	Created_at   time.Time `json:"created_at" bson:"created_at"`
 }
 
+// BookRequest represents the request payload for adding a new book.
 type BookRequest struct {
 	Title        string `json:"title"`
 	Author       string `json:"author"`
 	Published_at string `json:"published_at"`
 }
+
+// BookResponse represents the response payload containing a list of books.
 type BookResponse struct {
 	Data []*Book `json:"data"`
 }
 
+// GetAllBook retrieves all books from the database.
 func GetAllBook() (*BookResponse, error) {
+	// Connect to the database.
 	db, err := db.DBConnection()
 	if err != nil {
 		log.Default().Println(err.Error())
@@ -43,6 +49,7 @@ func GetAllBook() (*BookResponse, error) {
 	}
 	defer db.MongoDB.Client().Disconnect(context.TODO())
 
+	// Get the collection of books.
 	coll := db.MongoDB.Collection("books")
 	cur, err := coll.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -51,6 +58,7 @@ func GetAllBook() (*BookResponse, error) {
 	}
 	var books []*Book
 
+	// Iterate through the cursor and decode each book.
 	for cur.Next(context.TODO()) {
 		var getbooks model.Book
 		cur.Decode(&getbooks)
@@ -69,16 +77,16 @@ func GetAllBook() (*BookResponse, error) {
 }
 
 // AddBook adds a new book to the database.
-// If the request body is not a valid JSON, it returns an error with a 400 status code.
-// If the database connection fails, it returns an error with a 500 status code.
 func AddBook(req io.Reader) (*Book, error) {
 	var bookReq BookRequest
+	// Decode the request body into a BookRequest struct.
 	err := json.NewDecoder(req).Decode(&bookReq)
 	if err != nil {
 		log.Default().Println(err.Error())
 		return nil, errors.New("bad request")
 	}
 
+	// Connect to the database.
 	db, err := db.DBConnection()
 	if err != nil {
 		log.Default().Println(err.Error())
@@ -86,15 +94,16 @@ func AddBook(req io.Reader) (*Book, error) {
 	}
 	defer db.MongoDB.Client().Disconnect(context.TODO())
 
+	// Get the collection of books.
 	coll := db.MongoDB.Collection("books")
-	// Get the count of documents in the collection
+	// Get the count of documents in the collection.
 	count, err := coll.CountDocuments(context.TODO(), bson.D{})
 	if err != nil {
 		log.Default().Println(err.Error())
 		return nil, err
 	}
 
-	// Insert the new book with an incremented ID
+	// Insert the new book with an incremented ID.
 	newBook := Book{
 		ID:           int(count) + 1,
 		Title:        bookReq.Title,
@@ -113,7 +122,6 @@ func AddBook(req io.Reader) (*Book, error) {
 }
 
 // GetBookByID returns a book by ID.
-// If the book is not found, it sets the status code to 404 and returns an error.
 func GetBookByID(w http.ResponseWriter, r *http.Request) (*Book, error) {
 	// Get the book ID from the URL parameters.
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
@@ -151,7 +159,7 @@ func GetBookByID(w http.ResponseWriter, r *http.Request) (*Book, error) {
 	return nil, nil
 }
 
-// Update a book with the given ID.
+// UpdateBook updates a book with the given ID.
 func UpdateBook(w http.ResponseWriter, r *http.Request) error {
 	// Get the ID of the book from the URL parameters.
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
@@ -181,7 +189,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) error {
 
 	coll := db.MongoDB.Collection("books")
 
-	// Find the book by ID
+	// Find the book by ID.
 	var findBook *Book
 	if err := coll.FindOne(context.Background(), bson.D{{Key: "id", Value: id}}).Decode(&findBook); err != nil {
 		return errors.New("internal server error")
@@ -209,7 +217,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Delete a book with the given ID.
+// DeleteBook deletes a book with the given ID.
 func DeleteBook(w http.ResponseWriter, r *http.Request) error {
 	// Get the ID of the book from the URL parameters.
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
